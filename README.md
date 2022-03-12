@@ -10,7 +10,7 @@ First off, if you don't already have Node.js, [download it](https://nodejs.org/e
 If you're on Linux, it'll probably be easier to install it through your distribution's package manager, such as `apt`.  
 Once you have Node installed, download the source code from the [releases page](https://github.com/Chedski/rbxaudiodl/releases) and extract the zip file into a folder.  
 If you're on Windows, go into the folder, hold Shift, right click on the background, and then press "Open PowerShell window here".  
-If you're on a Mac, open the Terminal app, type "`cd `" (without quotes, and the trailing space is important!), drag the folder into the window, and press enter.  
+If you're on a Mac, open the Terminal app, type `cd ` (without quotes, and the trailing space is important!), drag the folder into the window, and press enter.  
 You should now have a terminal window open. In that window, type `npm ci` and press enter.  
 Wait for it to complete. (You only need to do this once)
 # Usage
