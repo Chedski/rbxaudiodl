@@ -19,6 +19,7 @@
   "dependencies": {
     "colors": "^1.4.0",
     "got": "^12.0.1",
+    "loading-spinner": "^1.2.1",
     "yargs": "^17.3.1"
   }
 }

@@ -3,8 +3,12 @@ const yargs = require('yargs/yargs')
 const { hideBin } = require('yargs/helpers')
 const path = require("path")
 const fs = require('fs')
+var loadingSpinner = require('loading-spinner')
 const { formatWithOptions } = require('util')
 const { isStringObject } = require('util/types')
+
+const defaultDownloadPath = path.resolve('./download')
+if (!fs.existsSync(defaultDownloadPath)) fs.mkdirSync(defaultDownloadPath)
 
 const argv = yargs(hideBin(process.argv))
 .help('h')
@@ -17,7 +21,7 @@ const argv = yargs(hideBin(process.argv))
 .alias('o', 'out-folder')
 .nargs('o', 1)
 .describe('o', `Directory to output downloaded files to`)
-.default('o',path.resolve('.'))
+.default('o',defaultDownloadPath)
 
 .boolean('q')
 .alias('q','quiet')
@@ -61,18 +65,27 @@ const argv = yargs(hideBin(process.argv))
 //   }
 // })
 
+var nlNextPrint = false
+
+function nlc() {
+  if (nlNextPrint) {
+    nlNextPrint = false
+    return '\n'
+  } else return ''
+}
+
 function verbose(text) {
-  if (argv.v) console.log(`${" VERBOSE ".bgGray.black} ${text.gray}`)
+  if (argv.v) console.log(`${nlc()}${" VERBOSE ".bgGray.black} ${text.gray}`)
 }
 function print(text) {
-  if (!argv.q) console.log(`${" INFO ".bgCyan.black} ${text.cyan}`)
+  if (!argv.q) console.log(`${nlc()}${" INFO ".bgCyan.black} ${text.cyan}`)
 }
 function printResult(result) {
-  console.log(`${" RESULT ".bgGreen.white} ${`${result}`.green}`)
+  console.log(`${nlc()}${" RESULT ".bgGreen.white} ${`${result}`.green}`)
 }
 function printError(text) {
   if (argv.v) console.error(text)
-  else console.log(`${" ERROR ".bgRed.black} ${text.red}`)
+  else console.log(`${nlc()}${" ERROR ".bgRed.black} ${text.red}`)
 }
 
 function getFileExt(mime) {
@@ -81,6 +94,29 @@ function getFileExt(mime) {
     case "audio/ogg": return '.ogg'
     default: return ''
   }
+}
+
+function setSpinnerText(text) {
+  nlNextPrint = true
+  loadingSpinner.setSequence(
+    [
+      `[${'|'.yellow}`.green+`]`.green+` ${text}`.cyan,
+      `[${'/'.yellow}`.green+`]`.green+` ${text}`.cyan,
+      `[${'-'.yellow}`.green+`]`.green+` ${text}`.cyan,
+      `[${'\\'.yellow}`.green+`]`.green+` ${text}`.cyan
+    ],
+  )
+}
+function startSpinner(text) {
+  nlNextPrint = true
+  if (text) setSpinnerText(text)
+  loadingSpinner.start(null,{
+    clearLine: true,
+    hideCursor: true,
+  })
+}
+function stopSpinner() {
+  loadingSpinner.stop()
 }
 
 function r() {
@@ -123,14 +159,14 @@ function r() {
         if (!audioId) { reject("invalid asset ID"); return }
 
         print(`downloading asset ${dlnum}: ${audioId}`)
-
         verbose(`getting page html`)
+        
+        startSpinner(`asset ${dlnum} - getting page html`)
         var pageHTML = await getBody(`https://www.roblox.com/library/${audioId}/`)
-
+        
+        setSpinnerText(`asset ${dlnum} - reading data from page`)
         verbose(`pulling metadata from page html`)
 
-        var mediathumb = /data-mediathumb-url="([\w\d:/.]+)"/g.exec(pageHTML)[1]
-        verbose(`got mediathumb url: ${mediathumb}`)
         if (!argv.s && !argv.F) {
           var safe_filename = /"canonical" href="https:\/\/www.roblox.com\/library\/\d+\/([\w\d-_]+)"/g.exec(pageHTML)[1]
           verbose(`got safe filename: ${safe_filename}`)
@@ -139,20 +175,39 @@ function r() {
         }
         var real_name = /data-item-name="(.*)"/g.exec(pageHTML)[1]
         verbose(`got full asset name: ${real_name}`)
+
+        var mediathumb_result = /data-mediathumb-url="([\w\d:/.]+)"/g.exec(pageHTML)
+        if (!mediathumb_result) { reject(`asset ${audioId} ("${real_name}") had no audio preview (moderated or not an Audio asset..?)`); return }
+        var mediathumb = mediathumb_result[1]
+        verbose(`got mediathumb url: ${mediathumb}`)
         
         var name = `${audioId}${argv.s?``:' '+(argv.F ? real_name.replace(/["<>\/\\|:?*]/g,"_") : safe_filename)}`
         verbose(`built base filename: ${name}`)
 
         verbose(`actually downloading: ${mediathumb}`)
+        setSpinnerText(`asset ${dlnum} - downloading data`)
         var fileData = await getDataAndMime(mediathumb)
+        verbose(`downloaded! mime type: ${fileData.mime}`)
         
         var filename = name + getFileExt(fileData.mime)
         verbose(`built filename: ${filename}`)
         var outPath = path.join(argv.o,filename)
         verbose(`built output path: ${outPath}`)
+        setSpinnerText(`asset ${dlnum} - saving file`)
         fs.writeFileSync(outPath,fileData.data)
         resolve(`file successfully downloaded as ${outPath}`)
       })
+    }
+
+    function howLongWillThisTake(items) {
+      if (items > 2000) return 'this is going to take an eternity (why are you even downloading this many assets???)'
+      else if (items > 800) return 'this is going to take an EXTREMELY long time'
+      else if (items > 500) return 'this is going to take a very, VERY long time'
+      else if (items > 300) return 'this is going to take a VERY long time'
+      else if (items > 200) return 'this will take a very long time'
+      else if (items > 100) return 'this will take a long time'
+      else if (items > 50) return 'this will take a while'
+      else return 'this might take a while'
     }
 
     function downloadUser(userId) {
@@ -162,12 +217,49 @@ function r() {
 
         print(`downloading audio from user ${userId}'s inventory`)
 
+        startSpinner(`inventory dl - checking availability`)
         verbose('checking if inventory is available')
         var {canView} = await getJSON(`https://inventory.roblox.com/v1/users/${userId}/can-view-inventory`)
         verbose(`inventory availability: ${canView}`)
         if (!canView) { reject("user's inventory is not public"); return }
 
-        reject("not implemented")
+        var pagenum = 1
+        var nextCursor = undefined
+        var items = []
+        async function getNextInventoryPage() {
+          verbose(`getting inventory - page ${pagenum}`)
+          setSpinnerText(`inventory dl - getting audio inventory - page ${pagenum} - ${items.length} items found`)
+          var data = await getJSON(`https://inventory.roblox.com/v2/users/${userId}/inventory/3?sortOrder=Asc&limit=50${nextCursor?`&cursor=${nextCursor}`:''}`)
+          nextCursor = data.nextPageCursor
+          verbose(`got page - found ${items.length} items`)
+          items = items.concat(data.data)
+          pagenum++
+        }
+        
+        verbose(`getting list of inventory items`)
+        await getNextInventoryPage()
+        while (nextCursor) {
+          await getNextInventoryPage()
+        }
+
+        print(`downloading ${items.length} assets - ${howLongWillThisTake(items.length)}`)
+
+        function dl(i) {
+          return new Promise(async (resolve,reject) => {
+            downloadAudioAsset(items[i].assetId,`${i+1}/${items.length}`).then((result) => {
+              stopSpinner()
+              printResult(result)
+              resolve()
+            }).catch((reason) => {
+              if (!argv.q) printError(`failed to download asset ${items[i].assetId}: ${reason}`)
+              resolve()
+            })
+          })
+        }
+
+        for (var i = 0; i < items.length; i++) {
+          await dl(i)
+        }
       })
     }
     
@@ -193,5 +285,11 @@ function r() {
 }
 
 r()
-.then(printResult)
-.catch(printError)
+.then((result) => {
+  stopSpinner()
+  printResult(result)
+})
+.catch((error) => {
+  stopSpinner()
+  printError(error)
+})
