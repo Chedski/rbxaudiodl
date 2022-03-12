@@ -1,6 +1,6 @@
 {
   "name": "rbxaudiodl",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Utility script for downloading Roblox audio in mass from lists of IDs and user inventories",
   "main": "index.js",
   "scripts": {

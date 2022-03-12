@@ -195,7 +195,7 @@ function r() { // Because await doesn't work in the top level
         setSpinnerText(`asset ${dlnum} - checking file format`)
         // Roblox servers' ability to identify filetypes is as bad as their moderators' ability to identify what actually breaks the rules.
         // Or, in technical terms: Figure out the MIME type on our end, because the Content-Type header Roblox gives us is unreliable.
-        var ftype = await fileTypeFromBuffer(fileData)
+        var ftype = (await fileTypeFromBuffer(fileData)) || { mime: "unknown", ftype: "mp3" }
         verbose(`file format found - ${ftype.mime} (.${ftype.ext})`)
         
         // Figure out where we're going to save the file to
