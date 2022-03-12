@@ -17,7 +17,7 @@ Wait for it to complete. (You only need to do this once)
 ## Bulk Downloading
 This script's main purpose is to allow developers to quickly and efficiently download large quantities of sound effects. As such, I've tried my best to make bulk audio downloads as simple and easy-to-understand as possible.  
 If you just want to download your (or someone else's) audio inventory, you can use this command: (Inventory must be *public*)
-```ps
+```
 node rbxaudiodl.js -u (user id) [options]
 node rbxaudiodl.js -u 38912959
 node rbxaudiodl.js -u 38912959 -FA
@@ -31,16 +31,16 @@ https://www.roblox.com/library/4814050595/Hinkik-Time-Leaper-full
 roblox.com/asset/?id=1280010741
 ```
 Most common Roblox ID formats (such as rbxassetid, library links, raw IDs, and legacy asset links) are supported for list files. To download the audio assets listed in a file, use this command:
-```ps
+```
 node rbxaudiodl.js -f (file) [options]
 node rbxaudiodl.js -f list.txt
 node rbxaudiodl.js -f list.txt -FA
-node rbxaudiodl.js -f list.txt -Ao "/home
+node rbxaudiodl.js -f list.txt -Ao "/home/chedski/Desktop/audio_download_example/"
 ```
 #### Bulk downloads can be made significantly faster by using the `-A` option, however this carries a small risk of rate limiting.
 ## Individual Downloading
 Individual assets can be downloaded too! This supports the same ID formats as the file list does.
-```ps
+```
 node rbxaudiodl.js -i (audio ID) [options]
 node rbxaudiodl.js -i 151915559
 node rbxaudiodl.js -i "rbxassetid://151915559" -Qso "/home/chedski/Desktop/example_folder"
