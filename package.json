@@ -1,0 +1,24 @@
+{
+  "name": "rbxaudiodl",
+  "version": "1.0.0",
+  "description": "Utility script for downloading Roblox audio in mass from lists of IDs and user inventories",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Chedski/rbxaudiodl.git"
+  },
+  "author": "chedski",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Chedski/rbxaudiodl/issues"
+  },
+  "homepage": "https://github.com/Chedski/rbxaudiodl#readme",
+  "dependencies": {
+    "colors": "^1.4.0",
+    "got": "^12.0.1",
+    "yargs": "^17.3.1"
+  }
+}
