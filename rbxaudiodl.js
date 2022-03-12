@@ -3,10 +3,9 @@ const yargs = require('yargs/yargs')
 const { hideBin } = require('yargs/helpers')
 const path = require("path")
 const fs = require('fs')
-const {fileTypeFromBuffer} = require('file-type')
 // var loadingSpinner = require('loading-spinner')
 var loadingSpinner = require('./loading-spinner-mod.js')
-const mimeTypes = require('mime')
+// const mimeTypes = require('mime')
 
 const defaultDownloadPath = path.resolve('./download')
 if (!fs.existsSync(defaultDownloadPath)) fs.mkdirSync(defaultDownloadPath)
@@ -161,6 +160,7 @@ function stopSpinner() {
 
 function r() { // Because await doesn't work in the top level
   return new Promise(async (resolve,reject) => {
+    const {fileTypeFromBuffer} = await import('file-type')
     var got = await import('got')
 
     function getJSON(url) { // Shorthand for JSON.parse((await got.got(url)).body)
@@ -174,7 +174,7 @@ function r() { // Because await doesn't work in the top level
     function getBody(url,raw) { // Shorthand for (await got.got(url)).body/rawBody
       return new Promise(async (resolve,reject) => {
         got.got(url).then((result) => {
-          try { resolve( raw ? result.body : result.rawBody ) }
+          try { resolve( raw ? result.rawBody : result.body ) }
           catch(err) { reject(err) }
         }).catch(reject)
       })
@@ -233,7 +233,7 @@ function r() { // Because await doesn't work in the top level
         setSpinnerText(`asset ${dlnum} - checking file format`)
         // Roblox servers' ability to identify filetypes is as bad as their moderators' ability to identify what actually breaks the rules.
         // Or, in technical terms: Figure out the MIME type on our end, because the Content-Type header Roblox gives us is unreliable.
-        var ftype = await fileTypeFromBuffer(fileData.data)
+        var ftype = await fileTypeFromBuffer(fileData)
         verbose(`file format found - ${ftype.mime} (.${ftype.ext})`)
         
         // Figure out where we're going to save the file to
@@ -242,7 +242,7 @@ function r() { // Because await doesn't work in the top level
         verbose(`built output path: ${outPath}`)
 
         setSpinnerText(`asset ${dlnum} - saving file`)
-        fs.writeFileSync(outPath,fileData.data)
+        fs.writeFileSync(outPath,fileData)
 
         resolve(`file successfully downloaded as ${outPath}`) // 🎉
         stopSpinner()
@@ -257,7 +257,8 @@ function r() { // Because await doesn't work in the top level
       else if (items > 200) return 'this will take a very long time'
       else if (items > 100) return 'this will take a long time'
       else if (items > 50) return 'this will take a while'
-      else return 'this might take a while'
+      else if (items > 10) return 'this might take a while'
+      else return 'please be patient'
     }
 
     function downloadUser(userId) {
@@ -318,7 +319,7 @@ function r() { // Because await doesn't work in the top level
     }
     
     function downloadFile(fileName) { // Download from a list file. See downloadAudioAsset() for ID downloading.
-      print(`downloading ids from file ${userId}`)
+      print(`downloading ids from file ${fileName}`)
       return new Promise(async (resolve,reject) => {
         startSpinner(`list dl - checking file`)
 
@@ -326,13 +327,13 @@ function r() { // Because await doesn't work in the top level
         var txt = fs.readFileSync(path.resolve(fileName))
         // Make sure it's actually a text file because splitting an image by newlines is probably a bad idea
         if (!typeof txt === 'string') { reject('not a text file'); return }
-        var ids = txt.split('\n')
+        var ids = new String(txt).split("\n")
         
-        print(`downloading ${items.length} assets - ${howLongWillThisTake(items.length)}`)
+        print(`downloading ${ids.length} assets - ${howLongWillThisTake(ids.length)}`)
 
         function dl(i) {
           return new Promise(async (resolve,reject) => {
-            downloadAudioAsset(ids[i],`${i+1}/${items.length}`).then((result) => {
+            downloadAudioAsset(ids[i],`${i+1}/${ids.length}`).then((result) => {
               stopSpinner()
               printResult(result)
               resolve()
