@@ -2,13 +2,22 @@ require('colors')
 const yargs = require('yargs/yargs')
 const { hideBin } = require('yargs/helpers')
 const path = require("path")
-const { assert } = require('console')
+const fs = require('fs')
+const { formatWithOptions } = require('util')
+const { isStringObject } = require('util/types')
 
 const argv = yargs(hideBin(process.argv))
 .help('h')
 .alias('h', 'help')
 
 .usage('Usage: $0 [options]')
+
+.string('o')
+.alias('o', 'out')
+.alias('o', 'out-folder')
+.nargs('o', 1)
+.describe('o', `Directory to output downloaded files to`)
+.default('o',path.resolve('.'))
 
 .boolean('q')
 .alias('q','quiet')
@@ -58,11 +67,20 @@ function verbose(text) {
 function print(text) {
   if (!argv.q) console.log(`${" INFO ".bgCyan.black} ${text.cyan}`)
 }
-function printResult(text) {
-  console.log(`${" RESULT ".bgGreen.white} ${toString(value).green}`)
+function printResult(result) {
+  console.log(`${" RESULT ".bgGreen.white} ${`${result}`.green}`)
 }
 function printError(text) {
-  console.log(`${" ERROR ".bgRed.black} ${text.red}`)
+  if (argv.v) console.error(text)
+  else console.log(`${" ERROR ".bgRed.black} ${text.red}`)
+}
+
+function getFileExt(mime) {
+  switch (mime) {
+    case "audio/mpeg": return '.mp3'
+    case "audio/ogg": return '.ogg'
+    default: return ''
+  }
 }
 
 function r() {
@@ -111,8 +129,8 @@ function r() {
 
         verbose(`pulling metadata from page html`)
 
-        var mediathumb_result = /data-mediathumb-url="([\w\d:/.]+)"/g.exec(pageHTML)[1]
-        verbose(`got mediathumb url: ${mediathumb_result}`)
+        var mediathumb = /data-mediathumb-url="([\w\d:/.]+)"/g.exec(pageHTML)[1]
+        verbose(`got mediathumb url: ${mediathumb}`)
         if (!argv.s && !argv.F) {
           var safe_filename = /"canonical" href="https:\/\/www.roblox.com\/library\/\d+\/([\w\d-_]+)"/g.exec(pageHTML)[1]
           verbose(`got safe filename: ${safe_filename}`)
@@ -125,9 +143,15 @@ function r() {
         var name = `${audioId}${argv.s?``:' '+(argv.F ? real_name.replace(/["<>\/\\|:?*]/g,"_") : safe_filename)}`
         verbose(`built base filename: ${name}`)
 
-
-
-        // resolve("ok")
+        verbose(`actually downloading: ${mediathumb}`)
+        var fileData = await getDataAndMime(mediathumb)
+        
+        var filename = name + getFileExt(fileData.mime)
+        verbose(`built filename: ${filename}`)
+        var outPath = path.join(argv.o,filename)
+        verbose(`built output path: ${outPath}`)
+        fs.writeFileSync(outPath,fileData.data)
+        resolve(`file successfully downloaded as ${outPath}`)
       })
     }
 
@@ -153,13 +177,17 @@ function r() {
         reject("not implemented")
       })
     }
-    
+
+    verbose(`output directory: ${argv.o}`)
+    if (!fs.existsSync(argv.o)) { reject("output path does not exist"); return }
+
     if (argv.F && argv.s) { reject("-F (--full-filename) and -s (--short-filename) are mutually exclusive"); return }
+
     if ((new Boolean(argv.f)+new Boolean(argv.u)+new Boolean(argv.i)) > 1) { reject("-u (--user), -i (--item), and -f (--file) are mutually exclusive") }
 
-    if (argv.u) downloadUser(argv.u).catch(reject)
-    else if (argv.f) downloadFile(argv.f).catch(reject)
-    else if (argv.i) downloadAudioAsset(argv.i).catch(reject)
+    if (argv.u) downloadUser(argv.u).then(resolve).catch(reject)
+    else if (argv.f) downloadFile(argv.f).then(resolve).catch(reject)
+    else if (argv.i) downloadAudioAsset(argv.i).then(resolve).catch(reject)
     else reject("Specify either a user ID, newline-separated list file, or asset ID (-u 1234567 OR -f foo.txt OR -i 9876543)")
   })
 }
