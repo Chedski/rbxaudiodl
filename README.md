@@ -5,7 +5,7 @@ This script can download audio in bulk from Roblox, using a .txt list of IDs or 
 # Prerequisites
 There's a few things you need in order to use this, such as Node.js and knowing how to open a terminal. If you already have Node and some basic terminal knowledge, you can skip to the [Usage](usage) section (don't forget to run `npm ci`).  
 First off, if you don't already have Node.js, [download it](https://nodejs.org/en/download/) and then run the installer. For most Roblox developers, the standard Windows/MacOS installer should work fine.  
-> Make sure that you check the option in the installer for NPM, because this won't work otherwise!
+#### Make sure that you check the option in the installer for NPM, because this won't work otherwise!
 
 If you're on Linux, it'll probably be easier to install it through your distribution's package manager, such as `apt`.  
 Once you have Node installed, download the source code from the [releases page](https://github.com/Chedski/rbxaudiodl/releases) and extract the zip file into a folder.  
@@ -37,7 +37,7 @@ node rbxaudiodl.js -f list.txt
 node rbxaudiodl.js -f list.txt -FA
 node rbxaudiodl.js -f list.txt -Ao "/home
 ```
-> Bulk downloads can be made significantly faster by using the `-A` option, however this carries a small risk of rate limiting.
+#### Bulk downloads can be made significantly faster by using the `-A` option, however this carries a small risk of rate limiting.
 ## Individual Downloading
 Individual assets can be downloaded too! This supports the same ID formats as the file list does.
 ```ps
