@@ -3,9 +3,7 @@ const yargs = require('yargs/yargs')
 const { hideBin } = require('yargs/helpers')
 const path = require("path")
 const fs = require('fs')
-// var loadingSpinner = require('loading-spinner')
 var loadingSpinner = require('./loading-spinner-mod.js')
-// const mimeTypes = require('mime')
 
 const defaultDownloadPath = path.resolve('./download')
 if (!fs.existsSync(defaultDownloadPath)) fs.mkdirSync(defaultDownloadPath)
@@ -36,16 +34,12 @@ const argv = yargs(hideBin(process.argv))
 .alias('A','async')
 .describe('A', `Disables waiting for one file to finish before starting another (MAY CAUSE RATE LIMITING)`)
 
-// .default('q',false)
-
 .boolean('s')
 .alias('s','short-filename')
-// .default('s',false)
 .describe('s', `Use only the ID for the filename (eg. '151915559.mp3' vs '151915559 Terraria-Boss-2.mp3')`)
 
 .boolean('F')
 .alias('F','full-filename')
-// .default('F',false)
 .describe('F', `Include spaces and other valid special characters in the filename (eg. '151915559 Terraria - Boss 2.mp3' vs '151915559 Terraria-Boss-2.mp3')`)
 
 .number('u')
@@ -65,16 +59,8 @@ const argv = yargs(hideBin(process.argv))
 
 .boolean('v')
 .alias('v','verbose')
-// .default('v',false)
 
 .parse(process.argv)
-// .check(function (argv) {
-//   if ((!argv.user && argv.file) || (argv.user && !argv.file)) {
-//     return true;
-//   } else {
-//     throw(new Error('Specify either a user ID or a newline-separated list file (-u 1234567 OR -f foo.txt'));
-//   }
-// })
 
 if (!argv.o) { argv.o = defaultDownloadPath }
 if (argv.Q) { argv.q = true }
@@ -101,27 +87,11 @@ function printError(text) {
   console.log(`${nlc()}${" ERROR ".bgRed.black} ${text.red}`)
 }
 
-// function getFileExt(mime) {
-//   console.log(mime)
-//   switch (mime) {
-//     case "audio/mpeg": return '.mp3'
-//     case "audio/ogg": return '.ogg'
-//     case "audio/wav": return '.wav'
-//     case "audio/vnd.wav": return '.wav'
-//     default: return '.mp3'
-//   }
-// }
-
 var isFirstSet = true
 var disableSpinner = false
 function setSpinnerText(text) {
   if (argv.Q || disableSpinner) return
-  // nlNextPrint = true
   function gt(spn) { return (`[${spn.yellow}`.green+`]`.green+` ${text}`.cyan).padEnd(150," ") }
-  // loadingSpinner.stop()
-  // console.log()
-  // if (isFirstSet) {
-  //   isFirstSet = false
   loadingSpinner.setSequence(
     [
       gt("|    "),
@@ -134,14 +104,6 @@ function setSpinnerText(text) {
       gt(" (   "),
     ]
   )
-  // }
-  // process.stdout.write((` ${text}`.cyan).padEnd(50," "))
-  // loadingSpinner.setText(text)
-  // print(text)
-  // loadingSpinner.start(75,{
-  //   clearLine: true,
-  //   hideCursor: true,
-  // })
 }
 function startSpinner(text) {
   if (argv.Q || disableSpinner) return
