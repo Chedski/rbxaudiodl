@@ -3,7 +3,7 @@ If you're here, I assume you've probably heard of the ["changes"](https://devfor
 Since many developers will need to reupload hundreds or even thousands of audio files within this short 2 week time period (spoiler alert: they REALLY aren't getting enough time), you're probably going to have to download a lot of that audio for archival until upload limits begin to reset.  
 This script can download audio in bulk from Roblox, using a .txt list of IDs or even a user's entire inventory.  
 # Prerequisites
-There's a few things you need in order to use this, such as Node.js and knowing how to open a terminal. If you already have Node and some basic terminal knowledge, you can skip to the [Usage](usage) section (don't forget to run `npm ci`).  
+There's a few things you need in order to use this, such as Node.js and knowing how to open a terminal. If you already have Node and some basic terminal knowledge, you can skip to the [Usage](#usage) section (don't forget to run `npm ci`).  
 First off, if you don't already have Node.js, [download it](https://nodejs.org/en/download/) and then run the installer. For most Roblox developers, the standard Windows/MacOS installer should work fine.  
 #### Make sure that you check the option in the installer for NPM, because this won't work otherwise!
 
